@@ -130,8 +130,13 @@ const detrend = (x: Float64Array, w = 8) => {
 };
 const env = detrend(flux);
 const envLow = detrend(fluxLow);
-// Phase is found on an envelope weighted toward the low band, so the grid locks to kicks rather than off-beat hats.
-const envPhase = env.map((v, i) => v + 1.5 * envLow[i]);
+// Beat phase: log spectral flux treats a quiet hi-hat like a kick, so in bright mixes the grid can lock to off-beat
+// hats (it did on the delivered track). Phase therefore uses *linear* broadband energy onsets, which the kick
+// dominates, with a little log flux as a tie-breaker.
+const energyFlux = new Float64Array(rms.length);
+for (let t = 1; t < rms.length; t++) energyFlux[t] = Math.max(0, rms[t] - rms[t - 1]);
+const envKick = detrend(energyFlux);
+const envPhase = envKick.map((v, i) => v + 0.25 * env[i]);
 
 // ---------- 2. tempo + phase ----------
 const peakNear = (x: Float64Array, pos: number, tol = 1) => {
@@ -184,7 +189,7 @@ for (let bpm = bpm0 * 0.97; bpm <= bpm0 * 1.03; bpm += 0.02) {
 }
 BPM = Math.round(BPM * 100) / 100;
 const beatSec = 60 / BPM;
-// STFT frames register an onset up to one window early; shift by half a window
+// energy frames span one window; an onset registers about half a window after the frame start
 const firstBeat = PH / R + (N / 2) / SR;
 const beats: number[] = [];
 for (let t = firstBeat; t < trackDur; t += beatSec) beats.push(t);
@@ -192,7 +197,7 @@ for (let t = firstBeat; t < trackDur; t += beatSec) beats.push(t);
 // ---------- 3. bar phase + start ----------
 const barScores = [0, 1, 2, 3].map((j) => {
   let s = 0;
-  for (let k = j; k < beats.length; k += 4) s += peakNear(envLow, beats[k] * R, 2) + 0.5 * peakNear(env, beats[k] * R, 2);
+  for (let k = j; k < beats.length; k += 4) s += peakNear(envKick, beats[k] * R, 2) + 0.5 * peakNear(envLow, beats[k] * R, 2);
   return s;
 });
 const barPhase = barScores.indexOf(Math.max(...barScores));

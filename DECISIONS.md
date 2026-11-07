@@ -12,23 +12,25 @@
   payoff shrink and end-card lines on beats). The keystone's contact ("lock") lands on the nearest downbeat
   ~0.8 s into the logo shot, and the end card starts on a downbeat 1.7–3.2 s from the end. Without music the end
   card keeps the storyboard's 27.5 s.
-- `scripts/music.ts` (runs on every render): decodes the mp3, builds log spectral-flux onset envelopes (full band
-  and < 150 Hz), estimates tempo by weighted autocorrelation refined with a comb filter over the whole track,
-  locks phase on a kick-weighted envelope (the full-band one locked to off-beat hats in testing), picks bar phase from
-  low-band onsets, and chooses the start: the downbeat with the biggest energy rise whose next 30 s stay strong
-  (slight preference for earlier). Then: trim 30.0 s, 0.5 s fade-in, 1.5 s fade-out, two-pass loudnorm to -14 LUFS
-  (linear), limiter at -2 dBFS for AAC headroom.
-- Tested on a synthetic 124 BPM track with a drop at 15.484 s: detected 123.98 BPM, start 15.467 s; rendered MP4
-  measured -14.4 LUFS, -1.7 dBTP; kicks landed within half a frame of the cuts. The test track was not committed.
+- `scripts/music.ts` (runs on every render): decodes the mp3, builds onset envelopes, estimates tempo by weighted
+  autocorrelation refined with a comb filter over the whole track, then finds the beat phase on *linear* broadband
+  energy onsets (kick-dominated). The first version used log spectral flux for phase and locked to the off-beat
+  hi-hats of the delivered track (grid 0.24 s early); verified by folding hats, kick transients and full-band energy.
+  Bar phase comes from kick strength per beat. The start is the downbeat with the biggest energy rise whose next
+  30 s stay strong (slight preference for earlier). Then: trim 30.0 s, 0.5 s fade-in, 1.5 s fade-out, two-pass
+  loudnorm to -14 LUFS (linear), limiter at -2 dBFS for AAC headroom.
+- Delivered track (`public/music.mp3`, 113.5 s): 125.01 BPM, start 1.955 s = the first full hit after the opening
+  riser (track is quiet 0–1.7 s, then constant energy, so that hit is the strongest intro). Final MP4 measures
+  -13.9 LUFS integrated, -2.8 dBTP true peak; folding the final audio's energy onsets onto the film's grid peaks at
+  0 ms offset.
+- Resulting cut points (frames): 0, 72, 158, 245, 317, 374, 475, 576, 677, 749, 806 (beats at 14.4 frames);
+  keystone lock at 346 and end card at 806 are downbeats.
+- Also checked on a synthetic 124 BPM track with a drop at 15.484 s: detected 123.98 BPM, start 15.46 s
+  (not committed).
 - Whooshes: synthesized in code (band-passed noise sweeps, no downloaded SFX), only on the three brand transitions
   (pine wipe panned left→right, arch zoom-through, payoff shrink as a soft downward sweep), 19–23 dB under full scale.
   Disable with `WHOOSH=0`.
-- `public/music.mp3` was not in the repo at render time, so the delivered MP4 has no audio track. The next
-  `npm run render` picks the file up automatically.
-- House ease `cubic-bezier(0.23,1,0.32,1)` everywhere; one settle spring (damping 17 / stiffness 140, overshoot ≈ 5%)
-  for big objects (arch stones, keystone, "$0", end-card icon, payoff shrink); a critically damped spring for camera zooms.
-- Logo moment re-timed after review: stones every 2.6 frames, keystone lands at 0.57 s, so the tagline holds ~0.6 s
-  before the zoom-through (it returns on the end card).
+- Without `public/music.mp3` the film renders silent on a 120 BPM grid.
 
 ## Transitions (3 brand transitions, everything else is a hard cut)
 1. Pine bar wipe, luck → law (the pivot). The law scene starts 6 frames early under the bar so content is arriving

@@ -1,3 +1,10 @@
 {
-  "present": false
+  "present": true,
+  "source": "public/music.mp3",
+  "trackDurationSec": 113.53,
+  "bpm": 125.01,
+  "startSec": 1.955,
+  "phaseSec": 0,
+  "barPhase": 0,
+  "beatConfidence": 0.435
 }
