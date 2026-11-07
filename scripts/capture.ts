@@ -159,7 +159,7 @@ class Take {
     const busy = await this.page.evaluate(`(${STEP_JS})(${this.vt})`).catch(() => false);
     const file = path.join(this.dir, `f${String(this.frames.length).padStart(5, '0')}.jpg`);
     // CDP capture is ~5× faster than page.screenshot and reflects the frame just stepped
-    const shot = await this.cdp.send('Page.captureScreenshot', {format: 'jpeg', quality: 93, optimizeForSpeed: true});
+    const shot = await this.cdp.send('Page.captureScreenshot', {format: 'jpeg', quality: 93, optimizeForSpeed: true, clip: {x: 0, y: 0, width: W, height: H, scale: DSF}});
     fs.writeFileSync(file, Buffer.from(shot.data, 'base64'));
     if (busy) this.busy.push(this.frames.length);
     this.frames.push(file);
@@ -288,6 +288,15 @@ const inView = (page: Page, sel: string) =>
     return r.top >= -2 && r.top < innerHeight * 0.5 && r.height > 0;
   }, sel);
 
+/** True when the brass keystone is seated at the top of the intro arch (pixel check on a take frame). */
+const brassSeated = (file: string) => {
+  const r = spawnSync('ffmpeg', ['-v', 'error', '-i', file, '-vf', 'crop=360:300:1240:100,format=rgb24', '-f', 'rawvideo', '-']);
+  const b = r.stdout as Buffer;
+  let n = 0;
+  for (let i = 0; i + 2 < b.length; i += 3) if (b[i] > 150 && b[i + 1] > 100 && b[i] - b[i + 2] > 60) n++;
+  return n > 8000;
+};
+
 // ---------------------------------------------------------------- slots
 type Plan = {key: string; keyAt?: number; zooms: {mark: string; offset: number; at?: 'point' | [number, number]; scale: number}[]};
 type SlotFn = (t: Take) => Promise<Plan>;
@@ -300,12 +309,15 @@ const SLOTS: Record<SlotId, SlotFn> = {
     await t.page.goto(BASE + '/', {waitUntil: 'commit', timeout: 60000});
     await t.refreeze();
     t.mark('start');
-    await t.until(() => visible(t.page.locator('[data-testid=intro-lockup]')), 9000, 600, 'intro lockup');
-    await t.wait(700); // lockup fully formed
-    t.mark('key');
-    await t.until(async () => !(await visible(t.page.locator('[data-testid=intro]'))), 6000, 300, 'intro handoff');
-    await t.wait(500);
+    // With WebGL the intro is a 3D arch: piers, voussoirs, then the brass keystone drops in and seats, the arch
+    // glows, the camera flies through it into the OC map, and the hero takes over. The take is clock-stepped from
+    // the first paint, so the keystone seats on the same frame every run: frame 73 (checked below).
+    await t.wait(125 * FRAME_MS);
+    t.marks.key = t.marks.start + 73;
+    await t.until(async () => !(await visible(t.page.locator('[data-testid=intro]'))), 8000, 300, 'intro handoff');
+    await t.wait(400);
     t.mark('end');
+    if (!brassSeated(t.frames[t.marks.key])) throw new Error('keystone not seated at the expected frame (intro timing changed?)');
     return {key: 'key', keyAt: LOGO_LOCK, zooms: []};
   },
 
@@ -314,7 +326,8 @@ const SLOTS: Record<SlotId, SlotFn> = {
     await go(t.page, '/');
     await sleep(8000); // intro plays, hero settles
     await t.page.click('button[aria-label="Go to section 3"]');
-    await sleep(7500); // luck section animation finishes
+    await t.page.locator('[data-testid=replay-2]').waitFor({state: 'visible', timeout: 20000}); // luck animation done
+    await sleep(600);
     await settled(t.page);
     await t.freeze();
     await t.wait(200);
@@ -333,12 +346,13 @@ const SLOTS: Record<SlotId, SlotFn> = {
     await go(t.page, '/');
     await sleep(8000);
     await t.page.click('button[aria-label="Go to section 2"]');
-    await sleep(7500);
+    await t.page.locator('[data-testid=replay-1]').waitFor({state: 'visible', timeout: 20000}); // challenge animation done
+    await sleep(600);
     await settled(t.page);
     await t.freeze();
     await t.wait(200);
     await t.press('ArrowDown', 'start');
-    await t.until(async () => (await t.page.evaluate(() => scrollY)) > 1700, 3000, 0, 'luck section');
+    await t.until(async () => (await t.page.evaluate(() => scrollY)) > 1700, 4000, 0, 'luck section');
     t.mark('arrived');
     const withKeystone = t.page.getByText(/^With Keystone$/).first();
     await t.until(async () => (await visible(withKeystone)) && (await withKeystone.evaluate((e: Element) => {
@@ -412,10 +426,11 @@ const SLOTS: Record<SlotId, SlotFn> = {
     // a draggable vertex: small circle handles drawn over the aerial
     const handle = await t.page.evaluate(() => {
       const out: {x: number; y: number}[] = [];
-      for (const c of document.querySelectorAll('[data-testid=scan-page] svg circle')) {
+      // each vertex is a 44 px grab target (r=22) over a 10 px dot
+      for (const c of document.querySelectorAll('svg circle')) {
         const r = c.getBoundingClientRect();
         const cs = getComputedStyle(c);
-        if (r.width >= 6 && r.width <= 26 && r.top > 160 && r.bottom < 880 && r.left > 60 && r.right < 820 && (cs.cursor.includes('grab') || cs.cursor.includes('move') || cs.cursor.includes('pointer')))
+        if (r.width >= 6 && r.width <= 60 && r.top > 160 && r.bottom < 880 && r.left > 60 && r.right < 820 && (cs.cursor.includes('grab') || cs.cursor.includes('move')))
           out.push({x: r.x + r.width / 2, y: r.y + r.height / 2});
       }
       return out.sort((a, b) => b.x + b.y - (a.x + a.y))[0] ?? null;
