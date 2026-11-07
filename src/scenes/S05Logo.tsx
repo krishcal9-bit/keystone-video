@@ -94,9 +94,9 @@ export const S05Logo: React.FC = () => {
       {intro && f < ZOOM_START - 2 && (
         <AbsoluteFill style={{opacity: Math.min(ease(f, 0, 6), 1 - ease(f, ZOOM_START - 10, 8)), background: C.paper}}>
           {intro.type === 'video' ? (
-            <OffthreadVideo src={staticFile(intro.file)} muted style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+            <OffthreadVideo src={staticFile(intro.file)} muted style={{width: '100%', height: '100%', objectFit: 'cover'}} />
           ) : (
-            <Img src={staticFile(intro.file)} style={{width: '100%', height: '100%', objectFit: 'contain'}} />
+            <Img src={staticFile(intro.file)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
           )}
         </AbsoluteFill>
       )}

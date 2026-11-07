@@ -75,18 +75,33 @@
 - `intro-logo`, if supplied, is shown full frame over the built logo for ~1.5 s, then fades so the arch zoom-through
   still carries into Find.
 
-## Capture (prepared, not run)
-- `scripts/capture.ts` (Playwright, preinstalled Chromium) targets https://keystone-oc.vercel.app at 1440×900,
-  deviceScaleFactor 2. It records with a CDP screencast (2880×1800 JPEG frames with timestamps) rather than
-  Playwright's built-in recorder (low-bitrate VP8), then assembles constant 30 fps H.264 with ffmpeg.
-- Slot lengths come from `SLOT_FRAMES` in the same beat-synced timeline the film uses. Takes run up to 1.35× the slot;
-  `<AppShot>` speed-ramps anything in that range to fit exactly.
-- A pine cursor ring with click ripples is injected into the page so real footage matches the placeholders.
-- Recording starts only after network idle and no visible spinner/busy element; spinners during a take are tracked
-  and the trim window moves past them, or the slot is kept as placeholder.
-- Dry-run against a local mock page only (never the live site): the site-finder flow produced a 2880×1800, 30 fps,
-  3.97 s clip with the cursor ring, and a missing route correctly kept its placeholder and logged the reason.
-- Not run against the live site, per instructions. Run with `npm run update` after the word "capture".
+## Capture (live app, run)
+- Scouted the live app first (routes, data-testids, animations) and wrote the takes against its real selectors:
+  `filter-eligible`, `filter-transit`, `oc-map` markers (fit score in aria-label), `sample-1`, "Scan lot",
+  `generate`, `sun-slider`, Today/Plan radios, `draft-letter`, `letter-text`, landing section dots and `replay-N`.
+- Frame-stepped capture instead of a screencast: real-time screencasts topped out at ~15 fps, and Plan Studio's 3D
+  renders at ~3 fps under software WebGL. The take freezes the page clock (Playwright clock) and the document
+  animation timeline (CDP `Animation.setPlaybackRate 0`), then per output frame advances JS time 1/30 s, seeks every
+  CSS/WAAPI animation to the same virtual time and grabs a 2880×1800 frame (CDP screenshot, ~5× faster than
+  `page.screenshot`). Verified against real-time screenshots: same animation order and pacing.
+- 1440×900 at deviceScaleFactor 2, light mode, fresh context per slot. Mouse moves on eased, slightly arced paths
+  (450–1100 ms by distance), pauses 300 ms before clicks, drags over 800 ms. No native cursor in the pixels; the
+  pointer position is logged every frame and `CursorTrack` draws the pine ring and ripples from it inside the
+  AppShot camera layer, so it stays on the real click target through zooms.
+- Plan Studio: the app shows a still render when the WebGL renderer looks like software, so the take reports a
+  hardware renderer string; the real three.js scene then renders (slowly, through SwiftShader) and is stepped.
+  The same switch makes the app's intro a 3D arch assembly, used for `intro-logo`.
+- Pitch Kit: the letter is the real Spanish letter from the live `/api/pitch` (fetched once in the take), replayed
+  through a page-side stream paced by the frozen clock at the live rate (~180 characters/s), because a stepped take
+  would otherwise receive the whole stream in a few frames.
+- "Searching vs. waiting": no section uses that wording; the closest is the landing's "From luck to a system"
+  section (Today: wait for a city to offer land / With Keystone: search every eligible parcel). That is what the
+  `search-vs-wait` slot records.
+- Edit: each take is speed-ramped (1× for ~1 s around the key moment, up to 2× through approaches and waits, eased
+  over 8 frames) instead of jump-cut, and the key moment (Eligible click, Scan click, Generate click, Español click,
+  the intro lockup, the law section's homes) is placed on a strong beat (`keyFrameFor`, downbeat when within
+  8 frames). Targeted zooms are aimed at the logged click points.
+- Bonus `site-detail` ("Keep parking" → "+N homes") has no slot in the storyboard, so it was not captured.
 
 ## Follow-ups
 - Push: the brief asks for `main`; the session's designated branch is `claude/hopeful-rubin-vi1bv7`. Both are pushed.

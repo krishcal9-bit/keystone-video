@@ -86,3 +86,27 @@ export const SLOT_FRAMES = {
   'pitch-kit': SHOT.pitch.dur,
   'search-vs-wait': SHOT.payoff.dur - 30,
 } as const;
+
+/** Absolute film frame at which frame 0 of each slot's clip is on screen. */
+export const SLOT_ORIGIN = {
+  'intro-logo': SHOT.logo.from,
+  'law-lot': SHOT.law.from - LAW_LEAD + 2,
+  'site-finder': SHOT.logo.from + ZOOM_START,
+  'lot-scan': SHOT.measure.from,
+  'plan-studio': SHOT.design.from,
+  'pitch-kit': SHOT.pitch.from,
+  'search-vs-wait': SHOT.payoff.from + 30,
+} as const;
+
+/**
+ * Where a clip's key moment (a click, homes rising…) should sit, as a frame inside the clip:
+ * the nearest strong beat (downbeat if one is within 8 frames) to `fraction` of the slot.
+ */
+export const keyFrameFor = (id: keyof typeof SLOT_FRAMES, fraction = 0.38) => {
+  const origin = SLOT_ORIGIN[id];
+  const len = SLOT_FRAMES[id];
+  const want = origin + len * fraction;
+  const down = nearestDownbeat(want, want - 8, want + 8);
+  const beat = Math.abs(down - want) <= 8 ? down : nearestBeat(want);
+  return Math.min(len - 6, Math.max(6, beat - origin));
+};

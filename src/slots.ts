@@ -39,12 +39,24 @@ export const SLOTS: Record<SlotId, SlotConfig> = {
   'search-vs-wait': {title: 'Searching vs. waiting comparison', zooms: []},
 };
 
+export type CaptureMeta = {
+  frames: number;
+  keyFrame: number;
+  /** per clip frame: normalized [x, y] of the pointer, or null when no pointer is on screen */
+  cursor: ([number, number] | null)[];
+  /** clip frames where a click (mouse down) happens */
+  clicks: number[];
+  /** targeted zooms in clip frames, normalized focus */
+  zooms: ZoomKey[];
+};
+
 export type ShotMedia = {
   file: string;
   type: 'video' | 'image';
   durationSec?: number;
   width?: number;
   height?: number;
+  meta?: CaptureMeta;
 };
 
 export const getShot = (id: SlotId): ShotMedia | null =>

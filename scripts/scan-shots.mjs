@@ -32,6 +32,16 @@ for (const id of IDS) {
   } catch (e) {
     console.warn(`ffprobe failed for ${pick}: ${e.message}`);
   }
+  // capture metadata (cursor track, clicks, zooms) written by scripts/capture.ts
+  const metaFile = path.join(dir, `${id}.json`);
+  if (fs.existsSync(metaFile)) {
+    try {
+      const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
+      entry.meta = {frames: meta.frames, keyFrame: meta.keyFrame, cursor: meta.cursor, clicks: meta.clicks, zooms: meta.zooms};
+    } catch (e) {
+      console.warn(`bad ${id}.json: ${e.message}`);
+    }
+  }
   manifest[id] = entry;
 }
 fs.writeFileSync(out, JSON.stringify(manifest, null, 2) + '\n');

@@ -5,6 +5,7 @@ import {SANS} from '../lib/fonts';
 import {camera, ease, lin, mix} from '../lib/motion';
 import {getShot, SLOTS, SlotId, ZoomKey} from '../slots';
 import {Placeholder, VW, VH} from './placeholders';
+import {CursorTrack} from './CursorTrack';
 
 type Props = {
   id: SlotId;
@@ -46,11 +47,14 @@ export const AppShot: React.FC<Props> = ({id, width, left, top, dur, push = [1, 
   const opacity = enter === 'rise' ? ease(frame, 0, 8) : 1;
 
   // Content camera: slow push 1.0 → 1.05 plus targeted spring zooms.
+  // Real captures carry their own zoom plan (aimed at the logged click points), in clip frames.
+  const meta = media?.meta;
+  const zf = meta ? frame : f;
   let lx = 0.5;
   let ly = 0.5;
   let s = 1;
-  for (const z of zooms ?? slot.zooms) {
-    const p = camera(f, z.at, fps);
+  for (const z of zooms ?? meta?.zooms ?? slot.zooms) {
+    const p = camera(zf, z.at, fps);
     lx = mix(lx, z.x, p);
     ly = mix(ly, z.y, p);
     s = mix(s, z.scale, p);
@@ -82,6 +86,14 @@ export const AppShot: React.FC<Props> = ({id, width, left, top, dur, push = [1, 
         />
       );
       inner = clipFrames * (1 / rate) < dur ? <Loop durationInFrames={Math.floor(clipFrames / rate)}>{video}</Loop> : video;
+    }
+    if (meta) {
+      inner = (
+        <div style={{position: 'relative', width: cw, height: ch}}>
+          {inner}
+          <CursorTrack frame={frame} meta={meta} w={cw} h={ch} />
+        </div>
+      );
     }
   } else {
     inner = (
