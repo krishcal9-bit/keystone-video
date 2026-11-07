@@ -2,7 +2,7 @@ import React from 'react';
 import {AbsoluteFill, interpolate, spring, useCurrentFrame} from 'remotion';
 import {C} from '../lib/brand';
 import {sans} from '../lib/fonts';
-import {ease, mix, SHOT} from '../lib/motion';
+import {ease, mix, rel, SHOT} from '../lib/motion';
 import {useL} from '../lib/layout';
 import {AppShot, shotHeight} from '../components/AppShot';
 import {Reveal} from '../components/Type';
@@ -30,7 +30,7 @@ export const StepScene: React.FC<{i: number; lead?: number}> = ({i, lead = 0}) =
   const {V, M} = useL();
   const s = STEPS[i];
   const g = useStepGeom();
-  const capAt = lead + 6; // half-beat-ish after the cut, on the grid (cut + 7.5 rounded)
+  const capAt = lead + rel(s.shot.from, 6, 2, 3); // first 8th-note after the cut
   return (
     <AbsoluteFill style={{background: C.paper}}>
       <AppShot id={s.id} width={g.w} left={g.left} top={g.top} dur={s.shot.dur + lead} push={s.push} enter={lead === 0 ? 'cut' : false} delay={lead} />

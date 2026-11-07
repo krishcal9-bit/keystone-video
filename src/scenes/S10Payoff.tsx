@@ -2,7 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Sequence, useCurrentFrame} from 'remotion';
 import {C} from '../lib/brand';
 import {serif} from '../lib/fonts';
-import {ease, settle, SHOT} from '../lib/motion';
+import {ease, rel, settle, SHOT} from '../lib/motion';
 import {useL} from '../lib/layout';
 import {CostBar} from '../components/CostBar';
 import {AppShot, shotHeight} from '../components/AppShot';
@@ -14,14 +14,16 @@ export const S10Payoff: React.FC = () => {
   const f = useCurrentFrame();
   const {V, M, W, H, CW} = useL();
   const g = useCostGeom();
-  const shrink = Math.min(1, settle(f, 8));
+  const F = SHOT.payoff.from;
+  const L2 = rel(F, 7.5, 2);
+  const shrink = Math.min(1, settle(f, rel(F, 8)));
   const s = {
     build: 1,
     swell: 1,
     family: 1,
     gap: 1,
     payoff: shrink,
-    callout: ease(f, 24, 14),
+    callout: ease(f, rel(F, 24, 2), 14),
   };
   // re-centred composition: the bar returns lower, leaving room for the comparison shot
   const headTop = V ? g.headTop : 214;
@@ -33,8 +35,8 @@ export const S10Payoff: React.FC = () => {
       <div style={{position: 'absolute', left: M, top: headTop, ...serif(g.headSize, 600), color: C.ink, width: CW}}>
         <Reveal at={0}>Stop waiting for land.</Reveal>
         {V ? (
-          <Reveal at={7.5}>
-            <WeightWord at={14} color={C.pine}>
+          <Reveal at={L2}>
+            <WeightWord at={L2 + 6} color={C.pine}>
               Start finding it.
             </WeightWord>
           </Reveal>
@@ -43,8 +45,8 @@ export const S10Payoff: React.FC = () => {
       {!V && (
         <div style={{position: 'absolute', left: M, top: headTop, ...serif(g.headSize, 600), width: CW}}>
           <span style={{visibility: 'hidden'}}>Stop waiting for land. </span>
-          <Reveal at={7.5} inline>
-            <WeightWord at={14} color={C.pine}>
+          <Reveal at={L2} inline>
+            <WeightWord at={L2 + 6} color={C.pine}>
               Start finding it.
             </WeightWord>
           </Reveal>

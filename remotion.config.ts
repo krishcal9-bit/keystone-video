@@ -12,6 +12,5 @@ Config.setVideoImageFormat('jpeg');
 Config.setJpegQuality(95);
 Config.setCodec('h264');
 Config.setPixelFormat('yuv420p');
-Config.setMuted(true);
 Config.setOverwriteOutput(true);
 Config.setConcurrency(4);

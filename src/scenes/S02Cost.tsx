@@ -2,7 +2,7 @@ import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {C} from '../lib/brand';
 import {sans, serif} from '../lib/fonts';
-import {ease, mix} from '../lib/motion';
+import {ease, mix, rel, SHOT} from '../lib/motion';
 import {useL} from '../lib/layout';
 import {CostBar} from '../components/CostBar';
 import {Reveal, Rolling, Source, WeightWord} from '../components/Type';
@@ -25,11 +25,13 @@ export const S02Cost: React.FC = () => {
   const f = useCurrentFrame();
   const {V, M, CW, H} = useL();
   const g = useCostGeom();
+  const F = SHOT.cost.from;
+  const SWELL = rel(F, 28);
   const s = {
     build: ease(f, 4, 22),
-    swell: ease(f, 28, 18),
-    family: ease(f, 42, 14),
-    gap: ease(f, 50, 16),
+    swell: ease(f, SWELL, 18),
+    family: ease(f, rel(F, 42, 2), 14),
+    gap: ease(f, rel(F, 50), 16),
     payoff: 0,
     callout: 0,
   };
@@ -38,7 +40,7 @@ export const S02Cost: React.FC = () => {
     <AbsoluteFill style={{background: C.paper}}>
       <div style={{position: 'absolute', left: M, top: g.headTop, ...serif(g.headSize, 600), color: C.ink, width: CW}}>
         <Reveal at={0}>
-          <WeightWord at={28} color={C.pine}>
+          <WeightWord at={SWELL} color={C.pine}>
             Land
           </WeightWord>{' '}
           is the biggest cost.
@@ -61,7 +63,7 @@ export const S02Cost: React.FC = () => {
         }}
       >
         {STATS.map((st, i) => {
-          const at = 44 + i * 7.5;
+          const at = rel(F, 44 + i * 7.5, 2);
           const t = ease(f, at, 26);
           return (
             <div key={st.num} style={{flex: 1, opacity: f >= at ? 1 : 0, transform: `translateY(${mix(18, 0, ease(f, at, 14))}px)`}}>

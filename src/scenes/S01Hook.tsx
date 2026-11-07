@@ -2,7 +2,7 @@ import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {C} from '../lib/brand';
 import {serif} from '../lib/fonts';
-import {ease, mix, settle} from '../lib/motion';
+import {ease, mix, rel, settle} from '../lib/motion';
 import {useL} from '../lib/layout';
 
 /** 0.0–2.5 s — "Every home has to hit $0." Words rise from masks; $0 lands in signal red. */
@@ -32,15 +32,18 @@ const Word: React.FC<{at: number; children: React.ReactNode; red?: boolean}> = (
 export const S01Hook: React.FC = () => {
   const {V} = useL();
   const size = V ? 150 : 176;
+  // words on 16ths, "hit" on an 8th, "$0." on the beat
+  const t = [rel(0, 4, 4), rel(0, 8, 4), rel(0, 11, 4), rel(0, 15, 4), rel(0, 22, 2), rel(0, 30)];
+  for (let i = 1; i < t.length; i++) t[i] = Math.max(t[i], t[i - 1] + 2);
   const lines: [string, number, boolean?][][] = V
     ? [
-        [['Every', 4], ['home', 8]],
-        [['has', 11], ['to', 15]],
-        [['hit', 22], ['$0.', 30, true]],
+        [['Every', t[0]], ['home', t[1]]],
+        [['has', t[2]], ['to', t[3]]],
+        [['hit', t[4]], ['$0.', t[5], true]],
       ]
     : [
-        [['Every', 4], ['home', 8], ['has', 11], ['to', 15]],
-        [['hit', 22], ['$0.', 30, true]],
+        [['Every', t[0]], ['home', t[1]], ['has', t[2]], ['to', t[3]]],
+        [['hit', t[4]], ['$0.', t[5], true]],
       ];
   return (
     <AbsoluteFill style={{background: C.paper, alignItems: 'center', justifyContent: 'center'}}>
