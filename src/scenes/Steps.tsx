@@ -12,7 +12,7 @@ export const STEPS: {id: SlotId; n: number; name: string; caption: string[]; sho
   {id: 'site-finder', n: 1, name: 'Find', caption: ['Find every', 'eligible site.'], shot: SHOT.find, push: [1, 1.03]},
   {id: 'lot-scan', n: 2, name: 'Measure', caption: ['Measure any lot', 'from the sky.'], shot: SHOT.measure, push: [1, 1.03]},
   {id: 'plan-studio', n: 3, name: 'Design', caption: ['See what it', 'can hold.'], shot: SHOT.design, push: [1, 1.07]},
-  {id: 'pitch-kit', n: 4, name: 'Pitch', caption: ['Start the', 'conversation,', 'in their language.'], shot: SHOT.pitch, push: [1, 1.03]},
+  {id: 'pitch-kit', n: 4, name: 'Pitch', caption: ['Draft the pitch', 'in Spanish.'], shot: SHOT.pitch, push: [1, 1.03]},
 ];
 
 export const useStepGeom = () => {

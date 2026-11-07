@@ -90,3 +90,7 @@
 
 ## Follow-ups
 - Push: the brief asks for `main`; the session's designated branch is `claude/hopeful-rubin-vi1bv7`. Both are pushed.
+
+## Copy changes
+- Pitch caption: "Start the conversation, in their language." → "Draft the pitch in Spanish." (direct, and it
+  matches what the screen shows).
