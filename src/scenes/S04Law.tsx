@@ -2,13 +2,13 @@ import React from 'react';
 import {AbsoluteFill, Sequence} from 'remotion';
 import {C} from '../lib/brand';
 import {sans, serif} from '../lib/fonts';
-import {SHOT} from '../lib/motion';
+import {LAW_LEAD, rel, SHOT} from '../lib/motion';
 import {useL} from '../lib/layout';
 import {AppShot, shotHeight} from '../components/AppShot';
 import {Reveal, Source, WeightWord} from '../components/Type';
 
 /** Lead-in frames: this scene starts under the pine bar wipe, 6 frames before its cut point. */
-export const LAW_LEAD = 6;
+export {LAW_LEAD};
 
 /** 8.0–10.5 s — SB 4. Text left, app footage right. */
 export const S04Law: React.FC = () => {
@@ -37,8 +37,8 @@ export const S04Law: React.FC = () => {
               {l}
             </Reveal>
           ))}
-          <Reveal at={T + 1 + 3 * 3.75}>
-            <WeightWord at={T + 20} color={C.pine}>
+          <Reveal at={T + rel(SHOT.law.from, 12, 2, 10)}>
+            <WeightWord at={T + rel(SHOT.law.from, 20)} color={C.pine}>
               by right.
             </WeightWord>
           </Reveal>

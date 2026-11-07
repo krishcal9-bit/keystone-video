@@ -2,22 +2,29 @@
   "name": "keystone-video",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Keystone 30-second product video (Remotion)",
   "scripts": {
-    "studio": "remotion studio",
+    "studio": "node scripts/scan-shots.mjs && tsx scripts/music.ts && remotion studio",
+    "music": "tsx scripts/music.ts",
+    "capture": "tsx scripts/capture.ts",
     "render": "node scripts/render.mjs",
-    "typecheck": "tsc --noEmit"
+    "review": "tsx scripts/review.mjs",
+    "update": "npm run capture && npm run render && npm run review",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json"
   },
   "dependencies": {
-    "@remotion/cli": "4.0.541",
     "@remotion/bundler": "4.0.541",
+    "@remotion/cli": "4.0.541",
     "@remotion/renderer": "4.0.541",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "remotion": "4.0.541"
   },
   "devDependencies": {
+    "@types/node": "^22.10.2",
     "@types/react": "19.2.2",
+    "tsx": "^4.19.2",
     "typescript": "5.9.3"
   }
 }

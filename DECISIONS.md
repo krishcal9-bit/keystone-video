@@ -1,9 +1,30 @@
 # Decisions log
 
-## Timing
-- 30 fps, 900 frames. Silent 120 BPM grid: 1 beat = 15 frames. Every storyboard boundary is a whole number of beats
-  (5, 11, 16, 21, 25, 32, 38, 45, 50, 55, 60), and headline/caption reveals land on beats, half-beats or sixteenths
-  (hook words at 16ths, then "hit" and "$0." on the beat). Tokens live in `src/lib/motion.ts`.
+## Format
+- Landscape only (1920×1080, 30 fps, H.264): `out/keystone-30s.mp4`. The portrait composition and its render were
+  removed. The layout helper still has portrait branches (unused) so a 9:16 cut stays cheap if it comes back.
+
+## Timing and music
+- 30 fps, 900 frames. The storyboard lives in `src/lib/timeline.ts` and is snapped to a beat grid:
+  with `public/music.mp3` the grid is the detected tempo; without it, a silent 120 BPM grid (15 frames per beat).
+- Snapping: every shot boundary goes to the nearest beat; major reveals snap to beats, 8ths or 16ths
+  (hook words on 16ths, "$0." on the beat, captions on the first 8th after each cut, "Land" swell, "by right.",
+  payoff shrink and end-card lines on beats). The keystone's contact ("lock") lands on the nearest downbeat
+  ~0.8 s into the logo shot, and the end card starts on a downbeat 1.7–3.2 s from the end. Without music the end
+  card keeps the storyboard's 27.5 s.
+- `scripts/music.ts` (runs on every render): decodes the mp3, builds log spectral-flux onset envelopes (full band
+  and < 150 Hz), estimates tempo by weighted autocorrelation refined with a comb filter over the whole track,
+  locks phase on a kick-weighted envelope (the full-band one locked to off-beat hats in testing), picks bar phase from
+  low-band onsets, and chooses the start: the downbeat with the biggest energy rise whose next 30 s stay strong
+  (slight preference for earlier). Then: trim 30.0 s, 0.5 s fade-in, 1.5 s fade-out, two-pass loudnorm to -14 LUFS
+  (linear), limiter at -2 dBFS for AAC headroom.
+- Tested on a synthetic 124 BPM track with a drop at 15.484 s: detected 123.98 BPM, start 15.467 s; rendered MP4
+  measured -14.4 LUFS, -1.7 dBTP; kicks landed within half a frame of the cuts. The test track was not committed.
+- Whooshes: synthesized in code (band-passed noise sweeps, no downloaded SFX), only on the three brand transitions
+  (pine wipe panned left→right, arch zoom-through, payoff shrink as a soft downward sweep), 19–23 dB under full scale.
+  Disable with `WHOOSH=0`.
+- `public/music.mp3` was not in the repo at render time, so the delivered MP4 has no audio track. The next
+  `npm run render` picks the file up automatically.
 - House ease `cubic-bezier(0.23,1,0.32,1)` everywhere; one settle spring (damping 17 / stiffness 140, overshoot ≈ 5%)
   for big objects (arch stones, keystone, "$0", end-card icon, payoff shrink); a critically damped spring for camera zooms.
 - Logo moment re-timed after review: stones every 2.6 frames, keystone lands at 0.57 s, so the tagline holds ~0.6 s
@@ -52,10 +73,18 @@
 - `intro-logo`, if supplied, is shown full frame over the built logo for ~1.5 s, then fades so the arch zoom-through
   still carries into Find.
 
-## Vertical (1080×1920)
-- Same scenes, re-laid out through `useL()`: three-line hook, stacked stats, horizontal progress rail on top,
-  shot centered with caption below, end-card line split in two.
+## Capture (prepared, not run)
+- `scripts/capture.ts` (Playwright, preinstalled Chromium) targets https://keystone-oc.vercel.app at 1440×900,
+  deviceScaleFactor 2. It records with a CDP screencast (2880×1800 JPEG frames with timestamps) rather than
+  Playwright's built-in recorder (low-bitrate VP8), then assembles constant 30 fps H.264 with ffmpeg.
+- Slot lengths come from `SLOT_FRAMES` in the same beat-synced timeline the film uses. Takes run up to 1.35× the slot;
+  `<AppShot>` speed-ramps anything in that range to fit exactly.
+- A pine cursor ring with click ripples is injected into the page so real footage matches the placeholders.
+- Recording starts only after network idle and no visible spinner/busy element; spinners during a take are tracked
+  and the trim window moves past them, or the slot is kept as placeholder.
+- Dry-run against a local mock page only (never the live site): the site-finder flow produced a 2880×1800, 30 fps,
+  3.97 s clip with the cursor ring, and a missing route correctly kept its placeholder and logged the reason.
+- Not run against the live site, per instructions. Run with `npm run update` after the word "capture".
 
-## Not done / follow-ups
-- Real footage capture from keystone-oc.vercel.app is deferred until the app is finished (per the brief).
+## Follow-ups
 - Push: the brief asks for `main`; the session's designated branch is `claude/hopeful-rubin-vi1bv7`. Both are pushed.

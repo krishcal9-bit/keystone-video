@@ -2,3 +2,5 @@ node_modules/
 .DS_Store
 review/
 *.log
+# generated from public/music.mp3 by scripts/music.ts
+public/music.processed.wav

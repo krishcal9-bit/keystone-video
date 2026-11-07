@@ -1,16 +1,16 @@
 import React from 'react';
-import {AbsoluteFill, Sequence, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {C} from './lib/brand';
 import './lib/fonts';
 import {Easing, interpolate} from 'remotion';
-import {SHOT} from './lib/motion';
+import {HAS_MUSIC, SHOT, ZOOM_DUR, ZOOM_START} from './lib/motion';
 import {useL} from './lib/layout';
 import {FilmFinish} from './components/FilmFinish';
 import {S01Hook} from './scenes/S01Hook';
 import {S02Cost} from './scenes/S02Cost';
 import {S03Luck} from './scenes/S03Luck';
 import {LAW_LEAD, S04Law} from './scenes/S04Law';
-import {openingPath, S05Logo, useArchGeom, ZOOM_DUR, ZOOM_START} from './scenes/S05Logo';
+import {openingPath, S05Logo, useArchGeom} from './scenes/S05Logo';
 import {ProgressRail, StepScene} from './scenes/Steps';
 import {S10Payoff} from './scenes/S10Payoff';
 import {S11End} from './scenes/S11End';
@@ -86,6 +86,8 @@ export const Main: React.FC = () => {
         <S11End />
       </Sequence>
       <FilmFinish />
+      {/* trimmed, faded, loudness-normalized mix written by scripts/music.ts */}
+      {HAS_MUSIC && <Audio src={staticFile('music.processed.wav')} />}
     </AbsoluteFill>
   );
 };

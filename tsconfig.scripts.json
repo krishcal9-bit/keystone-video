@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "lib": ["DOM", "ES2022"],
+    "target": "ES2022",
+    "module": "ESNext"
+  },
+  "include": ["scripts/*.ts", "src/lib/timeline.ts", "src/*.json"]
+}

@@ -2,7 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Img, OffthreadVideo, staticFile, useCurrentFrame} from 'remotion';
 import {C} from '../lib/brand';
 import {serif} from '../lib/fonts';
-import {ease, mix, settle} from '../lib/motion';
+import {ease, LOGO_LOCK, mix, rel, settle, SHOT, ZOOM_DUR, ZOOM_START} from '../lib/motion';
 import {useL} from '../lib/layout';
 import {STONES} from '../components/Arch';
 import {Reveal} from '../components/Type';
@@ -15,9 +15,8 @@ export const useArchGeom = () => {
   return {cx: W / 2, cy: V ? 760 : 405, k: V ? 1.9 : 1.7};
 };
 
-/** Zoom-through: the arch scales about its opening; the next scene shows through it. */
-export const ZOOM_START = 49;
-export const ZOOM_DUR = 15;
+/** Zoom-through: the arch scales about its opening; the next scene shows through it (timing in lib/timeline). */
+export {ZOOM_DUR, ZOOM_START};
 export const zoomScale = (f: number) => Math.exp(Math.log(18) * ease(f, ZOOM_START, ZOOM_DUR) ** 1.4);
 /** Arch-space point the camera flies through (inside the opening). */
 export const ZOOM_FOCUS = {x: 0, y: 14};
@@ -28,8 +27,11 @@ export const S05Logo: React.FC = () => {
   const {V} = useL();
   const g = useArchGeom();
   const intro = getShot('intro-logo');
-  const KEY_AT = 17;
-  const lock = KEY_AT + 9;
+  // the keystone makes contact on a musical downbeat (LOGO_LOCK); the settle spring touches down ~7 frames after release
+  const lock = LOGO_LOCK;
+  const KEY_AT = lock - 7;
+  const WORD_AT = Math.min(rel(SHOT.logo.from, 22, 2), ZOOM_START - 26);
+  const TAG_AT = Math.min(rel(SHOT.logo.from, 28, 2), ZOOM_START - 20);
   const glow = ease(f, lock, 20);
   const z = zoomScale(f);
   // zoom about the focus point
@@ -82,11 +84,11 @@ export const S05Logo: React.FC = () => {
         </svg>
       </div>
       <div style={{position: 'absolute', left: 0, right: 0, top: g.cy + (V ? 210 : 175), textAlign: 'center', opacity: 1 - textOut}}>
-        <Reveal at={22.5} pad={V ? 50 : 44}>
-          <Wordmark size={V ? 150 : 132} notch={ease(f, 30, 10)} />
+        <Reveal at={WORD_AT} pad={V ? 50 : 44}>
+          <Wordmark size={V ? 150 : 132} notch={ease(f, WORD_AT + 8, 10)} />
         </Reveal>
         <div style={{...serif(V ? 50 : 46, 400, 50), color: C.ink2, marginTop: V ? 30 : 22, letterSpacing: '-0.01em'}}>
-          <Reveal at={28}>Homeownership that holds.</Reveal>
+          <Reveal at={TAG_AT}>Homeownership that holds.</Reveal>
         </div>
       </div>
       {intro && f < ZOOM_START - 2 && (
